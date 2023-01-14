@@ -1,5 +1,6 @@
 import os
 import shutil
+import stat
 import sys
 import subprocess
 
@@ -85,7 +86,8 @@ def register_macos(schema, destination):
 </dict>
 </plist>
 """)
-    with open(os.path.join(app_dir, "Contents", "MacOS", "script.py"), "w+") as f:
+    script_path = os.path.join(app_dir, "Contents", "MacOS", "script.py")
+    with open(script_path, "w+") as f:
         f.write(f"""#!/usr/bin/python
 import struct
 from multiprocessing.connection import Client
@@ -122,6 +124,7 @@ if __name__ == '__main__':
     AppHelper.runEventLoop()
 
 """)
+    os.chmod(script_path, os.stat(script_path).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
 def cleanup_macos(schema: str):
