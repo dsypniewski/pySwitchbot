@@ -32,7 +32,7 @@ def register_linux(schema, destination):
     handler_path = os.path.join(applications_dir, f"{schema}_url_handler.desktop")
     with open(handler_path, "w+") as f:
         f.write(f"""[Desktop Entry]
-Name=SwitchBot Auth Client
+Name={schema} URL Handler
 Exec={sys.executable} -c "import sys; from multiprocessing.connection import Client; c = Client({destination}); c.send(sys.argv[2]); c.close()" - %u
 NoDisplay=true
 Type=Application
@@ -63,7 +63,7 @@ def register_macos(schema, destination):
     <key>CFBundleIdentifier</key>
     <string>pl.dsypniewski.{schema}_url_handler</string>
     <key>CFBundleName</key>
-    <string>SwitchBot Auth Handler</string>
+    <string>{schema} URL Handler</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
@@ -74,7 +74,7 @@ def register_macos(schema, destination):
     <array>
         <dict>
             <key>CFBundleURLName</key>
-            <string>SwitchBot Auth</string>
+            <string>{schema}</string>
             <key>CFBundleURLSchemes</key>
             <array>
                 <string>{schema}</string>
