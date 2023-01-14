@@ -68,8 +68,6 @@ def register_macos(schema, destination):
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
     <string>1.0</string>
-    <key>CFBundleSignature</key>
-    <string>SBAH</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
     <key>CFBundleURLTypes</key>
@@ -95,25 +93,18 @@ from multiprocessing.connection import Client
 from AppKit import NSAppleEventManager, NSObject, NSApp, NSApplication
 from PyObjCTools import AppHelper
 
-destination = {destination}
-
-
-def fourCharToInt(code):
-    return struct.unpack(">l", code)[0]
-
 
 class AppDelegate(NSObject):
     def applicationWillFinishLaunching_(self, _):
         manager = NSAppleEventManager.sharedAppleEventManager()
-        event_class = event_id = fourCharToInt(b"GURL")
+        event_class = event_id = struct.unpack(">l", b"GURL")[0]
         manager.setEventHandler_andSelector_forEventClass_andEventID_(self, "openURL:withReplyEvent:", event_class, event_id)
 
     def openURL_withReplyEvent_(self, event, _):
-        descriptor = fourCharToInt(b"----")
+        descriptor = struct.unpack(">l", b"----")[0]
         url = event.descriptorForKeyword_(descriptor).stringValue()
-        client = Client(destination)
-        client.send(url)
-        client.close()
+        with Client({destination}) as client:
+            client.send(url)
         NSApp().terminate_(self)
 
 
@@ -122,7 +113,6 @@ if __name__ == '__main__':
     delegate = AppDelegate.alloc().init()
     app.setDelegate_(delegate)
     AppHelper.runEventLoop()
-
 """)
     os.chmod(script_path, os.stat(script_path).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
