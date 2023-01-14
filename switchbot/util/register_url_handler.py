@@ -51,7 +51,7 @@ def cleanup_linux(schema: str):
 
 
 def register_macos(schema, destination):
-    app_dir = os.path.expanduser(f"~/Desktop/{schema}_url_handler.app")
+    app_dir = f"/Applications/{schema}_url_handler.app"
     os.makedirs(os.path.join(app_dir, "Contents", "MacOS"))
     with open(os.path.join(app_dir, "Contents", "Info.plist"), "w+") as f:
         f.write(f"""<?xml version="1.0" encoding="UTF-8"?>
@@ -128,6 +128,6 @@ if __name__ == '__main__':
 
 
 def cleanup_macos(schema: str):
-    app_dir = os.path.expanduser(f"~/Desktop/{schema}_url_handler.app")
+    app_dir = f"/Applications/{schema}_url_handler.app"
     if os.path.isdir(app_dir):
         shutil.rmtree(app_dir)
