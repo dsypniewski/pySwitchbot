@@ -115,8 +115,9 @@ class AppDelegate(NSObject):
     def openURL_withReplyEvent_(self, event, _):
         descriptor = struct.unpack(">l", b"----")[0]
         url = event.descriptorForKeyword_(descriptor).stringValue()
-        with Client({destination}) as client:
-            client.send(url)
+        client = Client({destination})
+        client.send(url)
+        client.close()
         NSApp().terminate_(self)
 
 
