@@ -29,13 +29,13 @@ def cleanup(schema: str):
 
 def _get_inline_command(destination, after, executable=sys.executable):
     lines = [
-        "import sys"
-        "from multiprocessing.connection import Client"
-        f"c = Client({destination})"
-        "c.send(sys.argv[2])"
-        "c.close()"
+        "import sys",
+        "from multiprocessing.connection import Client",
+        f"c = Client({destination})",
+        "c.send(sys.argv[2])",
+        "c.close()",
     ]
-    script = ";".join(lines)
+    script = "; ".join(lines)
     return f'{executable} -c "{script}" - {after}'
 
 
