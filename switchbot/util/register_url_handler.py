@@ -32,11 +32,11 @@ def _get_inline_command(destination, after, executable=sys.executable):
         "import sys",
         "from multiprocessing.connection import Client",
         f"c = Client({destination})",
-        "c.send(sys.argv[2])",
+        "c.send(sys.argv[1])",
         "c.close()",
     ]
     script = "; ".join(lines)
-    return f'{executable} -c "{script}" - {after}'
+    return f'{executable} -c "{script}" {after}'
 
 
 def register_linux(schema, destination):
