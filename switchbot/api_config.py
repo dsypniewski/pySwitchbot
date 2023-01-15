@@ -11,4 +11,4 @@ SWITCHBOT_APP_COGNITO_POOL = {
     "AppClientSecret": "1v3v7vfjsiggiupkeuqvsovg084e3msbefpj9rgh611u30uug6t8",
     "Region": "us-east-1",
 }
-SWITCHBOT_COGNITO_WEB_UI_URL = "https://wondertechlabs.auth.us-east-1.amazoncognito.com/oauth2/authorize"
+SWITCHBOT_COGNITO_WEB_UI_URL = "https://wondertechlabs.auth.us-east-1.amazoncognito.com/"

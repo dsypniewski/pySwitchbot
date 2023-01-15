@@ -3,6 +3,8 @@ import getpass
 import urllib.parse
 import sys
 import webbrowser
+import requests
+import requests.auth
 
 from multiprocessing.connection import Listener
 
@@ -10,6 +12,7 @@ from switchbot.util import internal_api, register_url_handler
 from switchbot.api_config import SWITCHBOT_APP_COGNITO_POOL, SWITCHBOT_COGNITO_WEB_UI_URL
 
 address = ('127.0.0.1', 6000)
+REDIRECT_URI = "switchbot://callback"
 
 
 def cli_auth():
@@ -32,26 +35,48 @@ def web_auth():
         register_url_handler.register("switchbot", address)
 
         print("Opening auth page")
+        # Chrome on Windows has 2048-character limit for custom URL handlers
+        # AWS token responses are over that limit hence using code type and then exchanging it
         query_str = urllib.parse.urlencode({
-            "response_type": "token",
+            "response_type": "code",
             "client_id": SWITCHBOT_APP_COGNITO_POOL['AppClientId'],
-            "redirect_uri": "switchbot://callback",
-            "identity_provider": "COGNITO"
+            "redirect_uri": REDIRECT_URI,
+            "identity_provider": "COGNITO",
         })
-        webbrowser.open_new_tab(SWITCHBOT_COGNITO_WEB_UI_URL + "?" + query_str)
+        webbrowser.open_new_tab(SWITCHBOT_COGNITO_WEB_UI_URL + "oauth2/authorize?" + query_str)
 
         print("Waiting for the auth response.")
         listener = Listener(address)
 
         conn = listener.accept()
         url = urllib.parse.urlparse(conn.recv())
-        query: dict = urllib.parse.parse_qs(url.fragment)
-        get_key(sys.argv[2], query["access_token"][0])
+        query: dict = urllib.parse.parse_qs(url.query)
+        access_token = get_access_token_from_code(query["code"][0])
+        get_key(sys.argv[2], access_token)
     except KeyboardInterrupt:
         # Cleanup after keyboard interrupt
         pass
 
     register_url_handler.cleanup("switchbot")
+
+
+def get_access_token_from_code(code: str):
+    token_url = f"{SWITCHBOT_COGNITO_WEB_UI_URL}oauth2/token"
+    auth = requests.auth.HTTPBasicAuth(
+        SWITCHBOT_APP_COGNITO_POOL["AppClientId"],
+        SWITCHBOT_APP_COGNITO_POOL["AppClientSecret"]
+    )
+
+    params = {
+        "grant_type": "authorization_code",
+        "client_id": (SWITCHBOT_APP_COGNITO_POOL["AppClientId"]),
+        "code": code,
+        "redirect_uri": REDIRECT_URI,
+    }
+
+    response = requests.post(token_url, auth=auth, data=params)
+
+    return response.json()["access_token"]
 
 
 def get_key(mac_address, auth_token):
