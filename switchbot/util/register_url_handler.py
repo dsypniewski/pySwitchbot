@@ -27,13 +27,25 @@ def cleanup(schema: str):
         raise RuntimeError("Unsupported platform")
 
 
+def _get_inline_command(destination, after, executable=sys.executable):
+    lines = [
+        "import sys"
+        "from multiprocessing.connection import Client"
+        f"c = Client({destination})"
+        "c.send(sys.argv[2])"
+        "c.close()"
+    ]
+    script = ";".join(lines)
+    return f'{executable} -c "{script}" - {after}'
+
+
 def register_linux(schema, destination):
     applications_dir = os.path.expanduser("~/.local/share/applications/")
     handler_path = os.path.join(applications_dir, f"{schema}_url_handler.desktop")
     with open(handler_path, "w+") as f:
         f.write(f"""[Desktop Entry]
 Name={schema} URL Handler
-Exec={sys.executable} -c "import sys; from multiprocessing.connection import Client; c = Client({destination}); c.send(sys.argv[2]); c.close()" - %u
+Exec={_get_inline_command(destination, '"%u"')}
 NoDisplay=true
 Type=Application
 Terminal=false
