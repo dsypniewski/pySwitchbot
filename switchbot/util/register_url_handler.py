@@ -45,7 +45,7 @@ def register_linux(schema, destination):
     with open(handler_path, "w+") as f:
         f.write(f"""[Desktop Entry]
 Name={schema} URL Handler
-Exec={_get_inline_command(destination, '"%u"')}
+Exec={_get_inline_command(destination, "%u")}
 NoDisplay=true
 Type=Application
 Terminal=false
