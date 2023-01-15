@@ -10,8 +10,8 @@ def register(schema: str, destination: tuple[str, int]):
         register_linux(schema, destination)
     elif sys.platform == "darwin":
         register_macos(schema, destination)
-    # elif sys.platform == "win32":
-    #     register_windows(schema, destination)
+    elif sys.platform == "win32":
+        register_windows(schema, destination)
     else:
         raise RuntimeError("Unsupported platform")
 
@@ -21,8 +21,8 @@ def cleanup(schema: str):
         cleanup_linux(schema)
     elif sys.platform == "darwin":
         cleanup_macos(schema)
-    # elif sys.platform == "win32":
-    #     register_windows(schema, destination)
+    elif sys.platform == "win32":
+        cleanup_windows(schema)
     else:
         raise RuntimeError("Unsupported platform")
 
@@ -133,3 +133,25 @@ def cleanup_macos(schema: str):
     app_dir = f"/Applications/{schema}_url_handler.app"
     if os.path.isdir(app_dir):
         shutil.rmtree(app_dir)
+
+
+def register_windows(schema, destination):
+    import winreg
+    root = winreg.ConnectRegistry(None, winreg.HKEY_CLASSES_ROOT)
+    schema_key = winreg.CreateKey(root, schema)
+    winreg.SetValue(schema_key, "", winreg.REG_SZ, f"URL:{schema} Protocol")
+    winreg.SetValue(schema_key, "URL Protocol", winreg.REG_SZ, "")
+    command_key = winreg.CreateKey(winreg.CreateKey(winreg.CreateKey(schema_key, "shell"), "open"), "command")
+    winreg.SetValue(command_key, "", winreg.REG_SZ, _get_inline_command(destination, '"%1"'))
+
+
+def cleanup_windows(schema):
+    import winreg
+    root = winreg.ConnectRegistry(None, winreg.HKEY_CLASSES_ROOT)
+    key = f"{schema}\\shell\\open\\command"
+    paths = [key]
+    while "\\" in key:
+        key, _ = key.rsplit("\\", 1)
+        paths.append(key)
+    for key in paths:
+        winreg.DeleteKey(root, key)
