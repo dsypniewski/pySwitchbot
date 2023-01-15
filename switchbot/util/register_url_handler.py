@@ -128,6 +128,7 @@ if __name__ == '__main__':
     AppHelper.runEventLoop()
 """)
     os.chmod(script_path, os.stat(script_path).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    subprocess.call(["/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister", "-f", app_dir])
 
 
 def cleanup_macos(schema: str):
