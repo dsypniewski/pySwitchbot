@@ -142,9 +142,9 @@ def register_windows(schema, destination):
     root = winreg.ConnectRegistry(None, winreg.HKEY_CLASSES_ROOT)
     schema_key = winreg.CreateKey(root, schema)
     winreg.SetValue(schema_key, "", winreg.REG_SZ, f"URL:{schema} Protocol")
-    winreg.SetValue(schema_key, "URL Protocol", winreg.REG_SZ, "")
+    winreg.SetValueEx(schema_key, "URL Protocol", 0, winreg.REG_SZ, "")
     command_key = winreg.CreateKey(winreg.CreateKey(winreg.CreateKey(schema_key, "shell"), "open"), "command")
-    winreg.SetValue(command_key, "", winreg.REG_SZ, _get_inline_command(destination, '"%1"'))
+    winreg.SetValue(command_key, "", winreg.REG_SZ, _get_inline_command(destination, '"%1"', f'"{sys.executable}"'))
 
 
 def cleanup_windows(schema):
