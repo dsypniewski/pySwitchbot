@@ -137,6 +137,8 @@ def _get_macos_info_plist(schema: str):
     <string>1.0</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
+    <key>LSUIElement</key>
+    <true/>
     <key>CFBundleURLTypes</key>
     <array>
         <dict>
