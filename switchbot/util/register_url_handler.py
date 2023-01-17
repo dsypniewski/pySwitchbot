@@ -75,25 +75,43 @@ def cleanup_macos(schema: str):
 def register_windows(schema, destination):
     # noinspection PyCompatibility
     import winreg
-    root = winreg.ConnectRegistry(None, winreg.HKEY_CLASSES_ROOT)
-    schema_key = winreg.CreateKey(root, schema)
-    winreg.SetValue(schema_key, "", winreg.REG_SZ, f"URL:{schema} Protocol handler")
+    import ctypes
+    if ctypes.windll.shell32.IsUserAnAdmin() == 1:
+        classes_root = winreg.ConnectRegistry(None, winreg.HKEY_CLASSES_ROOT)
+    elif not _is_microsoft_store_python():
+        root = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
+        classes_root = winreg.OpenKey(root, "Software\\Classes")
+    else:
+        raise RuntimeError("Unable to register protocol using python installed from Microsoft Store without Administrator privileges")
+
+    schema_key = winreg.CreateKey(classes_root, schema)
+    winreg.SetValueEx(schema_key, "", 0, winreg.REG_SZ, f"URL:{schema} Protocol handler")
     winreg.SetValueEx(schema_key, "URL Protocol", 0, winreg.REG_SZ, "")
     shell_key = winreg.CreateKey(schema_key, "shell")
     open_key = winreg.CreateKey(shell_key, "open")
     command_key = winreg.CreateKey(open_key, "command")
-    winreg.SetValue(command_key, "", winreg.REG_SZ, _get_inline_command(destination, '"%1"', f'"{sys.executable}"'))
+    command = _get_inline_command(destination, '"%1"', f'"{sys.executable}"')
+    winreg.SetValueEx(command_key, "", 0, winreg.REG_SZ, command)
 
 
 def cleanup_windows(schema):
     # noinspection PyCompatibility
     import winreg
-    root = winreg.ConnectRegistry(None, winreg.HKEY_CLASSES_ROOT)
+    import ctypes
+    if ctypes.windll.shell32.IsUserAnAdmin() == 1:
+        classes_root = winreg.ConnectRegistry(None, winreg.HKEY_CLASSES_ROOT)
+    elif not _is_microsoft_store_python():
+        root = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
+        classes_root = winreg.OpenKey(root, "Software\\Classes")
+    else:
+        # Nothing to clean-up
+        return
+
     key = f"{schema}\\shell\\open\\command"
-    winreg.DeleteKey(root, key)
+    winreg.DeleteKey(classes_root, key)
     while "\\" in key:
         key, _ = key.rsplit("\\", 1)
-        winreg.DeleteKey(root, key)
+        winreg.DeleteKey(classes_root, key)
 
 
 def _get_inline_command(destination, after, executable=sys.executable):
@@ -106,6 +124,13 @@ def _get_inline_command(destination, after, executable=sys.executable):
     ]
     script = "; ".join(lines)
     return f'{executable} -c "{script}" {after}'
+
+
+def _is_microsoft_store_python():
+    local_dir = os.path.realpath(os.path.expanduser("~\\AppData\\Local"))
+    test_file_path = os.path.join(local_dir, "url_handler_test.txt")
+    open(test_file_path, "w+").close()
+    return os.path.realpath(test_file_path) != test_file_path
 
 
 def _get_linux_desktop_file(schema, destination):
