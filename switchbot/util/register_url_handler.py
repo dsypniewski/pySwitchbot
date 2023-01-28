@@ -181,7 +181,7 @@ def _get_macos_info_plist(schema: str):
 
 
 def _get_macos_app_script(destination):
-    return f"""#!/usr/bin/python
+    return f"""#!{sys.executable}
 import struct
 from multiprocessing.connection import Client
 
